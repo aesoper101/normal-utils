@@ -1,6 +1,30 @@
-import { DragEventOptions } from "./types";
+import { isObject, isString } from "./common";
+import { BrowserUtils } from "./browser";
 
-export default class DOMUtils {
+export const enum NodeType {
+  ELEMENT_NODE = 1,
+  ATTRIBUTE_NODE = 2,
+  TEXT_NODE = 3,
+  CDATA_SECTION_NODE = 4,
+  ENTITY_REFERENCE_NODE = 5,
+  COMMENT_NODE = 6,
+  PROCESSING_INSTRUCTION_NODE = 7,
+  DOCUMENT_NODE = 9
+}
+
+export interface DragEventOptions {
+  drag?: (event: Event) => void;
+  start?: (event: Event) => void;
+  end?: (event: Event) => void;
+}
+
+export type ScrollElement = Element | Window;
+
+export class DOMUtils {
+  static isWindow(val: unknown): val is Window {
+    return val === window;
+  }
+
   /**
    * 添加事件
    *
@@ -80,7 +104,11 @@ export default class DOMUtils {
   }
 
   static getBoundingClientRect(element: HTMLElement): DOMRect | null {
-    if (element && typeof element === "object" && element.nodeType === 1) {
+    if (
+      element &&
+      isObject(element) &&
+      element.nodeType === NodeType.ELEMENT_NODE
+    ) {
       return element.getBoundingClientRect();
     }
 
@@ -96,9 +124,9 @@ export default class DOMUtils {
   public static hasClass(element: HTMLElement, className: string): boolean {
     if (
       element &&
-      typeof element === "object" &&
-      typeof className === "string" &&
-      element.nodeType === 1
+      isObject(element) &&
+      isString(className) &&
+      element.nodeType === NodeType.ELEMENT_NODE
     ) {
       return element.classList.contains(className.trim());
     }
@@ -114,9 +142,9 @@ export default class DOMUtils {
   public static addClass(element: HTMLElement, className: string): void {
     if (
       element &&
-      typeof element === "object" &&
-      typeof className === "string" &&
-      element.nodeType === 1
+      isObject(element) &&
+      isString(className) &&
+      element.nodeType === NodeType.ELEMENT_NODE
     ) {
       className = className.trim();
       if (!DOMUtils.hasClass(element, className)) {
@@ -135,9 +163,9 @@ export default class DOMUtils {
   public static removeClass(element: HTMLElement, className: string): void {
     if (
       element &&
-      typeof element === "object" &&
-      typeof className === "string" &&
-      element.nodeType === 1 &&
+      isObject(element) &&
+      isString(className) &&
+      element.nodeType === NodeType.ELEMENT_NODE &&
       typeof element.className === "string"
     ) {
       className = className.trim();
@@ -166,9 +194,9 @@ export default class DOMUtils {
   ): void {
     if (
       element &&
-      typeof element === "object" &&
-      typeof className === "string" &&
-      element.nodeType === 1
+      isObject(element) &&
+      isString(className) &&
+      element.nodeType === NodeType.ELEMENT_NODE
     ) {
       element.classList.toggle(className, force);
     }
@@ -188,16 +216,79 @@ export default class DOMUtils {
   ): void {
     if (
       element &&
-      typeof element === "object" &&
-      typeof oldClassName === "string" &&
-      typeof newClassName === "string" &&
-      element.nodeType === 1
+      isObject(element) &&
+      isString(oldClassName) &&
+      isString(newClassName) &&
+      element.nodeType === NodeType.ELEMENT_NODE
     ) {
       oldClassName = oldClassName.trim();
       newClassName = newClassName.trim();
       DOMUtils.removeClass(element, oldClassName);
       DOMUtils.addClass(element, newClassName);
     }
+  }
+
+  static getScrollTop(el: ScrollElement): number {
+    const top = "scrollTop" in el ? el.scrollTop : el.pageYOffset;
+
+    // iOS scroll bounce cause minus scrollTop
+    return Math.max(top, 0);
+  }
+
+  static setScrollTop(el: ScrollElement, value: number): void {
+    if ("scrollTop" in el) {
+      el.scrollTop = value;
+    } else {
+      el.scrollTo(el.scrollX, value);
+    }
+  }
+
+  static getRootScrollTop(): number {
+    return (
+      window.pageYOffset ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
+  }
+
+  static setRootScrollTop(value: number): void {
+    DOMUtils.setScrollTop(window, value);
+    DOMUtils.setScrollTop(document.body, value);
+  }
+
+  static getElementTop(el: ScrollElement, scroller?: HTMLElement): number {
+    if (DOMUtils.isWindow(el)) {
+      return 0;
+    }
+
+    const scrollTop = scroller
+      ? DOMUtils.getScrollTop(scroller)
+      : DOMUtils.getRootScrollTop();
+    return el.getBoundingClientRect().top + scrollTop;
+  }
+
+  static getVisibleHeight(el: ScrollElement): number {
+    if (DOMUtils.isWindow(el)) {
+      return el.innerHeight;
+    }
+    return el.getBoundingClientRect().height;
+  }
+
+  static isHidden(el: HTMLElement) {
+    if (!el) {
+      return false;
+    }
+
+    const style = window.getComputedStyle(el);
+    const hidden = style.display === "none";
+
+    // 在以下情况下，offsetParent返回null:
+    // 1. 元素或其父元素的display属性设置为none.
+    // 2. 元素的position属性设置为fixed
+    const parentHidden = el.offsetParent === null && style.position !== "fixed";
+
+    return hidden || parentHidden;
   }
 
   /**

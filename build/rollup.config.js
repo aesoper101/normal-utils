@@ -16,8 +16,9 @@ export default [
   {
     input: path.resolve(projectRoot, "utils/index.ts"),
     output: {
-      format: "es",
-      file: pkg.module
+      format: "esm",
+      file: pkg.module,
+      exports: "named"
     },
     plugins: [
       auto(),

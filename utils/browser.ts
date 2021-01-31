@@ -1,4 +1,4 @@
-export default class BrowserUtils {
+export class BrowserUtils {
   static isInBrowser(): boolean {
     return typeof window !== "undefined";
   }
