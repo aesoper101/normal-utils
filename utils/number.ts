@@ -7,7 +7,21 @@ export class NumberUtils {
    * @param b
    * @param c
    */
-  static clamp(a: number, b: number, c: number): number {
+  static range(a: number, b: number, c: number): number {
     return Math.min(Math.max(a, b), c);
+  }
+
+  static clamp(value: number, min: number, max: number) {
+    return min < max
+      ? value < min
+        ? min
+        : value > max
+        ? max
+        : value
+      : value < max
+      ? max
+      : value > min
+      ? min
+      : value;
   }
 }

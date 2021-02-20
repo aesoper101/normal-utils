@@ -28,36 +28,39 @@ export class DOMUtils {
   /**
    * 添加事件
    *
-   * @param element
+   *
+   * @param element 如果为null将不会添加事件
    * @param event
    * @param handler
-   * @param useCapture
+   * @param options
    */
   static addEventListener(
-    element: HTMLElement | Document | Window,
+    element: HTMLElement | Document | Window | null,
     event: string,
     handler: EventListenerOrEventListenerObject,
-    useCapture = false
+    options: boolean | AddEventListenerOptions = false
   ): void {
     if (element && event && handler) {
-      element.addEventListener(event, handler, useCapture);
+      element.addEventListener(event, handler, options);
     }
   }
 
   /**
    * 移除事件
    *
-   * @param element
+   * @param element 如果为null将不会移除事件
    * @param event
    * @param handler
+   * @param options
    */
   static removeEventListener(
-    element: HTMLElement | Document | Window,
+    element: HTMLElement | Document | Window | null,
     event: string,
-    handler: EventListenerOrEventListenerObject
+    handler: EventListenerOrEventListenerObject,
+    options: boolean | EventListenerOptions = false
   ): void {
     if (element && event && handler) {
-      element.removeEventListener(event, handler, false);
+      element.removeEventListener(event, handler, options);
     }
   }
 
@@ -292,6 +295,21 @@ export class DOMUtils {
   }
 
   /**
+   * 触发事件
+   *
+   * @param el
+   * @param type
+   */
+  static triggerEvent(el: Element, type: string) {
+    if ("createEvent" in document) {
+      // modern browsers, IE9+
+      const e = document.createEvent("HTMLEvents");
+      e.initEvent(type, false, true);
+      el.dispatchEvent(e);
+    }
+  }
+
+  /**
    * 计算相对于中心点的旋转角度
    * @param element
    * @param event
@@ -341,5 +359,21 @@ export class DOMUtils {
     }
 
     return angle;
+  }
+
+  /**
+   * querySelector
+   *
+   * @param selectors
+   * @param parentElement
+   */
+  static querySelector<E extends Element = Element>(
+    selectors: string,
+    parentElement?: HTMLElement
+  ): E | null {
+    if (parentElement) {
+      return parentElement.querySelector(selectors);
+    }
+    return document.querySelector(selectors);
   }
 }

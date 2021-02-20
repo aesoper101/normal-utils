@@ -7,3 +7,4 @@ export * from "./array";
 export * from "./date";
 export * from "./common";
 export * from "./function";
+export * from "./number";
